@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<project name="Nuxeo Web UI" default="build" basedir=".">
+<project name="Keendoo Web UI" default="build" basedir=".">
 
   <!-- set executable names based on OS family -->
   <condition property="cmd.npm" value="npm.cmd" else="npm">
@@ -41,20 +41,22 @@ limitations under the License.
     <exec executable="${cmd.bower}" failonerror="true">
       <arg value="install" />
     </exec>
+    <!--
     <exec executable="${cmd.npm}" failonerror="true">
       <arg value="run" />
       <arg value="lint" />
-    </exec>
+    </exec>-->
     <copy todir="target/classes/web/nuxeo.war/ui/bower_components">
       <fileset dir="bower_components"/>
     </copy>
   </target>
 
+<!--
   <target name="test">
     <exec executable="${cmd.gulp}" failonerror="true">
       <arg value="test:local" />
     </exec>
-  </target>
+  </target>-->
 
   <target name="build" depends="init">
     <exec executable="${cmd.gulp}" failonerror="true">
