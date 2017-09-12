@@ -193,7 +193,7 @@ gulp.task('merge-local-in-nuxeo-web-ui',['copy-nuxeo-web-ui'], function() {
     app('*.{html,ico}'),
     app('manifest.json'),
     app('elements/**/*'),
-    app('i18n/**/*'),
+    //app('i18n/**/*'),
     app('styles/**/*'),
     app('themes/**/*')
   ], {
@@ -205,7 +205,7 @@ gulp.task('merge-local-in-nuxeo-web-ui',['copy-nuxeo-web-ui'], function() {
 
 // merge message files from nuxeo-ui-elements, nuxeo-web-ui and keendoo-web-ui
 // in case of conflict, keendoo-web-ui prevails
-gulp.task('merge-message-files', function() {
+gulp.task('merge-message-files',  function() {
   var i18ndist = dist('i18n');
   var i18ntmp = '.tmp/i18n';
   var i18nwebui = '.nuxeo-web-ui/i18n';
