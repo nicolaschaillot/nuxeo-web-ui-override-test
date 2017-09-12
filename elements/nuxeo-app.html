@@ -1,0 +1,939 @@
+<!--
+@license
+(C) Copyright Nuxeo Corp. (http://nuxeo.com/)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/nuxeo-elements/nuxeo-document.html">
+<link rel="import" href="../bower_components/nuxeo-elements/nuxeo-operation.html">
+<link rel="import" href="../bower_components/nuxeo-elements/nuxeo-resource.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-layout.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-slots.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-i18n-behavior.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-routing-behavior.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-layout-behavior.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-filters-behavior.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-icons.html">
+<link rel="import" href="../bower_components/paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="../bower_components/paper-header-panel/paper-header-panel.html">
+<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="nuxeo-app/nuxeo-progress-indicator.html">
+<link rel="import" href="nuxeo-app/nuxeo-menu-item.html">
+<link rel="import" href="nuxeo-app/nuxeo-menu-icon.html">
+<link rel="import" href="nuxeo-app/nuxeo-page.html">
+<link rel="import" href="nuxeo-app/nuxeo-page-item.html">
+
+<!-- nuxeo-home -->
+<link rel="import" href="../bower_components/nuxeo-elements/nuxeo-page-provider.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-data-table/iron-data-table.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/widgets/nuxeo-date.html">
+<link rel="import" href="../bower_components/nuxeo-ui-elements/widgets/nuxeo-user-tag.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="nuxeo-document-thumbnail/nuxeo-document-thumbnail.html">
+
+<!-- i18n -->
+<link rel="import" href="../i18n/i18n.html">
+
+<!-- themes -->
+<link rel="import" href="../themes/base.html">
+<link rel="import" href="../themes/loader.html">
+
+<!-- routing -->
+<link rel="import" href="routing.html">
+
+<script src="nuxeo-app/nuxeo-doc-types.js"></script>
+
+<!--
+`nuxeo-app`
+@group Nuxeo UI
+@element nuxeo-app
+-->
+<dom-module id="nuxeo-app">
+  <template>
+    <style>
+
+      paper-header-panel, iron-pages::content paper-header-panel {
+        --paper-header-panel-body: {
+          background: var(--nuxeo-page-background);
+        };
+        height: 100vh;
+      }
+
+      paper-drawer-panel {
+        --paper-drawer-panel-left-drawer-container: {
+          z-index: 100;
+        };
+        --paper-drawer-panel-scrim: {
+          z-index: 2;
+        };
+      }
+
+      /* logo */
+      #logo {
+        position: fixed;
+        width: 52px;
+        height: 53px;
+        top: 0;
+        left: 0;
+        z-index: 102;
+        box-sizing: border-box;
+        outline: none;
+        background-color: var(--nuxeo-sidebar-background);
+      }
+
+      #logo img {
+        width: 52px;
+        height: 53px;
+      }
+
+      /* menu */
+      #menu {
+        @apply(--nuxeo-sidebar);
+        position: fixed;
+        width: 52px;
+        height: calc(100% - 54px);
+        z-index: 100;
+        padding: 53px 0;
+        overflow: auto;
+      }
+
+      #menu ::content paper-icon-button {
+        color: var(--nuxeo-sidebar-menu);
+        height: 48px;
+        padding: 12px 13px;
+        width: 52px;
+      }
+
+      #logo:hover img,
+      #menu ::content nuxeo-menu-icon:hover ::content paper-icon-button,
+      #menu ::content nuxeo-menu-icon.selected ::content paper-icon-button {
+        background: rgba(0, 0, 0, 0.2);
+        color: var(--nuxeo-sidebar-menu-hover);
+      }
+
+      #logo:hover img {
+        filter: brightness(110%);
+        -webkit-filter: brightness(110%);
+      }
+
+      #menu .profile-icon,
+      #menu .admin-icon {
+        position: fixed;
+        height: 48px;
+        bottom: 0;
+        left: 0;
+      }
+
+      #menu .admin-icon {
+        bottom: 48px;
+      }
+
+      @media (max-width: 1024px), (max-height: 700px) {
+        #menu .profile-icon,
+        #menu .admin-icon {
+          position: relative;
+          bottom: auto;
+        }
+      }
+
+      /* drawer */
+      #drawer {
+        overflow: auto;
+        width: 100%;
+      }
+
+      #drawer .header,
+      #drawer ::content .header {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+        font-size: 1rem;
+        height: 53px;
+        padding: 0 16px;
+        text-transform: uppercase;
+        text-overflow: ellipsis;
+        color: var(--nuxeo-drawer-header);
+      }
+
+      #drawer iron-pages {
+        @apply(--layout-vertical);
+        color: var(--nuxeo-drawer-text);
+        width: 294px;
+        height: 100vh;
+        margin-left: 52px;
+        background-color: var(--nuxeo-drawer-background);
+      }
+
+      #drawer ::content nuxeo-menu-item:hover,
+      #drawer ::content .list-item:hover {
+        @apply(--nuxeo-block-hover);
+      }
+
+      #drawer ::content .list-item.selected,
+      #drawer ::content nuxeo-menu-item.iron-selected,
+      #drawer ::content .list-item:focus,
+      #drawer ::content nuxeo-menu-item:focus,
+      #drawer ::content .list-item.selected:focus,
+      #drawer ::content nuxeo-menu-item.iron-selected:focus {
+        @apply(--nuxeo-block-selected);
+      }
+
+      #drawer ::content nuxeo-menu-item {
+        @apply(--nuxeo-sidebar-item-theme);
+      }
+
+      #drawer ::content nuxeo-menu-item a {
+        @apply(--nuxeo-sidebar-item-link);
+      }
+
+      #drawer .profile nuxeo-menu-item:last-of-type {
+        @apply(--layout-vertical);
+        border: none;
+        justify-content: flex-end;
+      }
+
+      #drawerToggle {
+        position: absolute;
+        top: 5px;
+        left: 6px;
+        z-index: 99;
+        background-color: var(--nuxeo-drawer-background);
+      }
+
+      .blueHeader {
+        background-color: #fff;
+        box-shadow: 0 2px 4px 0 rgba(0,0,0,0.50);
+      }
+      .blueHeader app-toolbar {
+        height: var(--nuxeo-app-header-height);
+        padding: 0 0;
+      }
+      .blueHeader paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
+
+      nuxeo-document-create-button.admin {
+        display: none;
+      }
+
+      paper-drawer-panel[narrow] ::content nuxeo-page ::content .header {
+        margin-left: 32px;
+      }
+    </style>
+
+    <nuxeo-connection id="nxcon" user="{{currentUser}}"></nuxeo-connection>
+
+    <nuxeo-document id="doc" doc-id="[[docId]]" doc-path="[[docPath]]"
+                    response="{{currentDocument}}"
+                    enrichers="permissions, breadcrumb, preview, favorites, subscribedNotifications, thumbnail, renditions, pendingTasks, runnableWorkflows, runningWorkflows, collections, audit, subtypes, tags"
+                    headers='{"X-NXfetch.document": "lock,properties", "X-NXtranslate.directoryEntry": "label", "X-NXfetch.task": "actors"}'>
+    </nuxeo-document>
+
+    <nuxeo-operation id="userWorkspace" op="User.GetUserWorkspace"></nuxeo-operation>
+
+    <nuxeo-resource id="tasks" path="/task" headers='{"X-NXfetch.task": "targetDocumentIds,actors"}'></nuxeo-resource>
+    <nuxeo-resource id="task" path="/task/[[currentTaskId]]" headers='{"X-NXfetch.task": "targetDocumentIds,actors"}'></nuxeo-resource>
+
+    <app-header-layout>
+            <!-- header -->
+            <app-header class="blueHeader" condenses fixed effects="waterfall" slot="header">
+              <app-toolbar>
+                  <div main-title></div>
+                  <!-- image logo  -->
+                  <a id="logo" href="/home">
+                      <iron-image class="main-logo" sizing="contains" src="[[_logo()]]"></iron-image>
+                  </a>
+                  <!-- User infos -->
+                  <keendoo-user-navigation id="user-nav" user="[[currentUser]]"></keendoo-user-navigation>
+                  <!-- Sign out button -->
+                  <keendoo-button-logout id="buttonLogout"></keendoo-button-logout>
+              </app-toolbar>
+            </app-header>
+                
+            <app-drawer-layout>
+    <!-- app layout -->
+    <paper-drawer-panel id="drawerPanel" drawer-width="[[drawerWidth]]" responsive-width="720px" edge-swipe-sensitivity="0">
+      <div drawer>
+
+        <!-- logo -->
+        <a id="logo" href$="[[urlFor('home')]]">
+          <img src$="[[_logo(baseUrl)]]" alt="[[i18n('accessibility.logo')]]"/>
+        </a>
+
+        <!-- menu -->
+        <paper-menu id="menu" selected="{{selectedTab}}" attr-for-selected="name" selected-class="selected" on-iron-activate="_toggleDrawer">
+          <nuxeo-slot slot="DRAWER_ITEMS" model="[[actionContext]]"></nuxeo-slot>
+          <nuxeo-menu-icon name="administration" icon="nuxeo:admin" label="app.administration" class="admin-icon"
+                           hidden$="[[!_hasAdministrationPermissions(currentUser)]]">
+          </nuxeo-menu-icon>
+          <nuxeo-menu-icon name="profile" icon="nuxeo:user-settings" label="app.account" class="profile-icon"></nuxeo-menu-icon>
+        </paper-menu>
+
+        <!-- drawer -->
+        <div id="drawer">
+          <iron-pages id="drawer-pages" selected="[[selectedTab]]" attr-for-selected="name" selected-attribute="visible">
+
+            <nuxeo-slot slot="DRAWER_PAGES" model="[[actionContext]]"></nuxeo-slot>
+
+            <template is="dom-if" if="[[_hasAdministrationPermissions(currentUser)]]">
+              <div name="administration">
+                <div class="header">[[i18n('app.administration')]]</div>
+                <iron-selector selected="{{selectedAdminTab}}" attr-for-selected="name">
+                  <nuxeo-slot slot="ADMINISTRATION_MENU" model="[[actionContext]]"></nuxeo-slot>
+                </iron-selector>
+              </div>
+            </template>
+
+            <div name="profile" class="layout vertical">
+              <div class="header">[[_displayUser(currentUser)]]</div>
+              <iron-selector selected="{{selectedProfileTab}}" attr-for-selected="name">
+                <nuxeo-slot slot="USER_MENU" model="[[actionContext]]"></nuxeo-slot>
+                <nuxeo-menu-item name="logout" label="app.user.signOut" link="[[_logout()]]"></nuxeo-menu-item>
+              </iron-selector>
+            </div>
+
+          </iron-pages>
+        </div>
+      </div>
+
+      <!-- pages -->
+      <paper-header-panel main mode="seamed">
+        <iron-pages id="pages" selected="[[page]]" attr-for-selected="name" selected-attribute="visible">
+
+          <nuxeo-slot slot="PAGES" model="[[actionContext]]"></nuxeo-slot>
+
+          <nuxeo-home name="home" tasks="[[tasks]]"></nuxeo-home>
+
+          <nuxeo-browser name="browse" id="browser" document="[[currentDocument]]" selected-tab="{{docAction}}" clipboard="[[clipboard]]"></nuxeo-browser>
+
+          <nuxeo-search-results name="search" id="searchResults" search-form="[[searchForm]]"></nuxeo-search-results>
+
+          <nuxeo-tasks id="tasks-dashboard" name="tasks" tasks="[[tasks]]" current="[[currentTask]]"></nuxeo-tasks>
+
+          <nuxeo-admin name="admin" user="[[currentUser]]" selected="[[selectedAdminTab]]" entity="[[entity]]" on-error="_onError"></nuxeo-admin>
+
+          <nuxeo-profile name="profile" selected="[[selectedProfileTab]]" user="[[currentUser]]"></nuxeo-profile>
+
+          <nuxeo-themes name="themes" selected="[[selectedProfileTab]]"></nuxeo-themes>
+
+          <nuxeo-page name="error">
+            <div class="header"></div>
+            <div class="content">
+              <paper-card>
+                <nuxeo-error id="error">
+                </nuxeo-error>
+              </paper-card>
+            </div>
+          </nuxeo-page>
+
+        </iron-pages>
+
+        <paper-icon-button id="drawerToggle" icon="menu" on-tap="_openDrawer" paper-drawer-toggle></paper-icon-button>
+        <nuxeo-suggester id="suggester"></nuxeo-suggester>
+
+      </paper-header-panel>
+    </paper-drawer-panel>
+
+</app-drawer-layout>
+</app-header-layout>
+
+    <nuxeo-document-create-button class$="[[page]]" parent="[[currentParent]]" hidden$="[[isMobile]]"></nuxeo-document-create-button>
+    <nuxeo-document-create-popup id="importPopup" parent="[[currentParent]]" default-path="/"></nuxeo-document-create-popup>
+
+    <nuxeo-progress-indicator visible="[[loading]]"></nuxeo-progress-indicator>
+
+    <paper-toast id="toast">
+      <paper-icon-button icon="icons:close" on-tap="_dismissToast" hidden$="[[!_dismissible]]"></paper-icon-button>
+    </paper-toast>
+
+    <nuxeo-keys keys="/ ctrl+space s" on-pressed="_showSuggester"></nuxeo-keys>
+    <nuxeo-keys keys="d" on-pressed="showHome"></nuxeo-keys>
+    <nuxeo-keys keys="c" on-pressed="_showDocumentCreationWizard"></nuxeo-keys>
+    <nuxeo-keys keys="m" on-pressed="_focusMenu"></nuxeo-keys>
+
+    <nuxeo-mobile-banner document="[[currentDocument]]" is-mobile="{{isMobile}}"></nuxeo-mobile-banner>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'nuxeo-app',
+      behaviors: [Nuxeo.RoutingBehavior, Nuxeo.I18nBehavior, Nuxeo.FiltersBehavior],
+      properties: {
+
+        productName: {
+          type: String,
+          value: 'Nuxeo'
+        },
+
+        baseUrl: {
+          type: String,
+          value: '/',
+          observer: '_baseUrlChanged'
+        },
+
+        loading: {
+          type: Boolean,
+          value: false
+        },
+
+        page: {
+          type: String,
+          observer: '_pageChanged'
+        },
+
+        selectedTab: String,
+        selectedAdminTab: String,
+
+        currentDocument: Object,
+        currentParent: Object,
+        docId: String,
+        docPath: String,
+        docAction: {
+          type: String,
+          value: 'view'
+        },
+
+        entity: Object,
+
+        searchName: {
+          type: String,
+          observer: '_updateSearch'
+        },
+
+        tasks: Array,
+
+        taskCount: Number,
+
+        drawerWidth: {
+          type: String,
+          value: '52px'
+        },
+
+        drawerOpened: {
+          type: Boolean,
+          value: false
+        },
+
+        keyEventTarget: {
+          type: Object,
+          value: function() {
+            return document.body;
+          }
+        },
+
+        currentTask: {
+          type: Object,
+          value: null
+        },
+
+        currentUser: {
+          type: Object,
+          observer: '_observeCurrentUser'
+        },
+
+        userWorkspace: {
+          type: String
+        },
+
+        actionContext: {
+          type: Object,
+          computed: '_actionContext(currentDocument, currentUser, tasks, currentTask, taskCount,' +
+          ' clipboard, clipboardDocCount, userWorkspace)'
+        },
+
+        clipboard: {
+          type: Object,
+          value: null
+        },
+
+        clipboardDocCount: {
+          type: Number,
+          value: 0,
+          notify: true
+        },
+
+        _dismissible: {
+          type: Boolean,
+          value: false
+        }
+      },
+
+      listeners: {
+        'document-updated': 'refresh',
+        'create-document': '_showDocumentCreationWizard',
+        'document-created': '_handleDocumentCreated',
+        'workflowStarted': '_refreshAndFetchTasks',
+        'workflowAbandoned': '_refreshAndFetchTasks',
+        'workflowTaskProcess': '_workflowTaskProcess',
+        'workflowTaskProcessed': '_refreshAndFetchTasks',
+        'added-to-clipboard': '_onAddedToClipboard',
+        'add-to-clipboard': '_onAddToClipboard',
+        'added-to-collection': '_documentAddedToCollection',
+        'removed-from-clipboard': '_documentRemovedFromClipboard',
+        'removed-from-collection': '_documentRemovedFromCollection',
+        'file-deleted': '_documentFileDeleted',
+        'added-to-favorites': '_documentAddedToFavorites',
+        'removed-from-favorites': '_documentRemovedFromFavorites',
+        'document-subscribed': '_documentSubscribed',
+        'document-unsubscribed': '_documentUnsubscribed',
+        'document-locked': '_documentLocked',
+        'document-unlocked': '_documentUnlocked',
+        'theme-changed': '_themeChanged',
+        'search-results': '_showSearchResults',
+        'navigate': '_navigate',
+        'collection-loaded': '_updateCollectionMenu',
+        'notify': '_notify',
+        'nx-clipboard-updated': '_clipboardUpdated',
+        'drawer-pages.iron-items-changed': '_updateSearch'
+      },
+
+      ready: function() {
+        this.$.drawerPanel.closeDrawer();
+
+        window.addEventListener('unhandledrejection', function(e) {
+          if (e.reason && e.reason.status === 404) {
+            this.showError(404, e.reason.message, this._errorUrl());
+          }
+        }.bind(this));
+
+        window.addEventListener('nuxeo-documents-deleted', function() {
+          this._fetchTasks();
+        }.bind(this));
+
+        window.addEventListener('nuxeo-documents-deleted-error', function(e) {
+          this._documentsDeletedError(e.detail.response, e.detail.documents);
+        }.bind(this));
+      },
+
+      refresh: function() {
+        if (this.docPath && this.docPath.length > 0) {
+          this.navigateTo('browse', this.docPath ? this.docPath : '');
+        } else {
+          page('/');
+        }
+      },
+
+      loadTask: function(id) {
+        if (id && id.length > 0){
+          this.loading = true;
+          this.currentTaskId = id;
+          this.$.task.get().then(function(task) {
+            this.currentTask = task;
+            this.show('tasks');
+            this.loading = false;
+          }.bind(this));
+        } else {
+          this.currentTask = null;
+          this.show('tasks');
+        }
+      },
+
+      load: function(page, id, path, action) {
+        this.loading = true;
+        this.docId = id;
+        this.docPath = path;
+        this.docAction = action;
+        this.$.doc.get().then(function(doc) {
+          if (this.docId && !doc.isVersion) {
+            this.docId = '';
+            this.docPath = doc.path;
+            this.navigateTo('browse', doc.path);
+          } else {
+            var recent = this.$$('#recent');
+            if (recent) {
+              recent.add(doc);
+            }
+            this.currentParent = this.hasFacet(doc, 'Folderish') ? doc :
+              doc.contextParameters.breadcrumb.entries.slice(-2, -1)[0];
+            this.set('currentDocument', doc);
+            this.loading = false;
+            this.show(page);
+          }
+        }.bind(this)).catch(function(err) {
+          this.showError(err.status, this.i18n('browse.error'), err.message)
+        }.bind(this));
+      },
+
+      showError: function(code, msg, url) {
+        this.loading = false;
+        var errorEl = this.$.error;
+        errorEl.code = code;
+        errorEl.message = msg;
+        errorEl.url = url;
+        this.show('error');
+      },
+
+      show: function(page) {
+        this.page = page;
+        this._updateTitle();
+      },
+
+      _updateTitle: function() {
+        var title = [];
+        switch (this.page) {
+          case 'browse':
+            if (this.currentDocument && this.currentDocument.title) {
+              title.push(this.currentDocument.title);
+              if (this.currentDocument.type === 'Collections') {
+                title.push(this.i18n('app.title.collections'));
+              } else if (this.hasFacet(this.currentDocument, 'Collection')) {
+                if (this.currentDocument.type === 'Favorites') {
+                  title.push(this.i18n('app.title.favorites'));
+                } else {
+                  title.push(this.i18n('app.title.collection'));
+                }
+              }
+            }
+            break;
+
+          case 'search':
+            if (this.searchForm) {
+              if (this.searchForm.selectedSearch && this.searchForm.selectedSearch.title) {
+                title.push(this.searchForm.selectedSearch.title);
+              } else if (this.searchForm.searchName) {
+                title.push(this.i18n('app.title.search.' + this.searchForm.searchName));
+              }
+            }
+            title.push(this.i18n('app.title.search'));
+            break;
+
+          case 'tasks':
+            if (this.currentTask) {
+              title.push(this.i18n(this.currentTask.workflowModelName));
+              title.push(this.i18n(this.currentTask.name));
+            } else {
+              title.push(this.i18n('app.title.' + this.page));
+            }
+            break;
+
+          case 'admin':
+            if (this.selectedAdminTab) {
+              title.push(this.i18n('app.title.admin.' + this.selectedAdminTab));
+            }
+            title.push(this.i18n('app.title.' + this.page));
+            break;
+
+          default:
+            title.push(this.i18n('app.title.' + this.page));
+        }
+        title.push(this.productName);
+        document.title = title.join(' - ');
+      },
+
+      _baseUrlChanged: function() {
+        Nuxeo.RoutingBehavior.baseUrl = this.baseUrl;
+      },
+
+      _logo: function(baseUrl) {
+        return baseUrl + 'themes/' + (localStorage.getItem('theme') || 'default') + '/logo.png';
+      },
+
+      showHome: function() {
+        this.show('home');
+      },
+
+      _actionContext: function() {
+        return {
+          document: this.currentDocument,
+          user: this.currentUser,
+          taskCount: this.taskCount,
+          tasks: this.tasks,
+          currentTask: this.currentTask,
+          clipboardDocCount: this.clipboardDocCount,
+          clipboard: this.clipboard,
+          actionContext: this.actionContext,
+          userWorkspace: this.userWorkspace
+        };
+      },
+
+      _focusMenu: function() {
+        this.$.menu.focus();
+      },
+
+      _showSuggester: function() {
+        this.$.suggester.toggle();
+      },
+
+      _showDocumentCreationWizard: function(e) {
+        if (e.detail.keyboardEvent && (e.detail.keyboardEvent.ctrlKey || e.detail.keyboardEvent.metaKey)) {
+          return;
+        }
+        if (e.detail.files) {
+          this.$.importPopup.toggleDialogImport(e.detail.files);
+        } else if (e.detail.type) {
+          this.$.importPopup.toggleDialogCreate(e.detail.type);
+        } else {
+          this.$.importPopup.toggleDialog();
+        }
+      },
+
+      _navigate: function(e) {
+        if (e.detail.doc) {
+          this.navigateTo('browse', e.detail.doc.path);
+          if (e.detail.isFromCollection) {
+            this.$$('#collectionsForm').displayMembers(e.detail.srcDoc, e.detail.doc);
+          }
+        }
+      },
+
+      // lookup the search
+      _updateSearch: function() {
+        this.searchForm = this.$$("nuxeo-search-form[search-name='" + this.searchName + "']");
+        if (this.searchForm && this._searchOnLoad) {
+          this.searchForm._search();
+          this._searchOnLoad = false;
+        }
+      },
+
+      _updateCollectionMenu: function(e) {
+        if (e.detail.provider) {
+          this.$$('#collectionsForm').loadCollection(e.detail.collection, e.detail.provider);
+        }
+      },
+
+      _showSearchResults: function(e) {
+        this.navigateTo('search', e.target.searchName);
+      },
+
+      _toggleDrawer: function(e) {
+        if (this._selected === e.detail.selected && this.drawerOpened) {
+          this._closeDrawer();
+        } else {
+          this._openDrawer();
+        }
+        this._selected = e.detail.selected;
+      },
+
+      _openDrawer: function() {
+        this.drawerWidth = '350px';
+        this.drawerOpened = true;
+        var drawerPanel = this.$.drawerPanel;
+        if (drawerPanel.narrow) {
+          drawerPanel.openDrawer();
+        }
+        if (!this.selectedTab){
+          var drawer = this.$['drawer-pages'];
+          drawer.selectIndex(0);
+          this.selectedTab = drawer.selected
+        }
+      },
+
+      _closeDrawer: function() {
+        this.drawerWidth = '52px';
+        this.drawerOpened = false;
+        this.$.drawerPanel.closeDrawer();
+      },
+
+      _fetchTasks: function() {
+        this.$.tasks.params = {'userId': this.currentUser.id};
+        this.$.tasks.get().then(function(response) {
+          this.tasks = response.entries;
+          this.taskCount = this.tasks.length;
+        }.bind(this));
+      },
+
+      _refreshAndFetchTasks: function() {
+        // let's refresh the current document since it might have been changed (ex: state and version)
+        this.refresh();
+        this._fetchTasks();
+      },
+
+      _workflowTaskProcess: function(e) {
+        this.navigateTo('tasks', e.detail.id);
+      },
+
+      _onAddedToClipboard: function(e){
+        this._toast(
+          this.i18n(e.detail.docIds && e.detail.docIds.length > 1
+            ? 'app.documents.addedToClipboard' : 'app.document.addedToClipboard')
+        );
+      },
+
+      _onAddToClipboard: function(e) {
+        if (e.detail.documents && this.clipboard) {
+          this.clipboard.add(e.detail.documents)
+        }
+      },
+
+      _observeCurrentUser: function() {
+        if (this.currentUser) {
+          this.$.userWorkspace.execute().then(function(response) {
+            this.userWorkspace = response.path;
+          }.bind(this));
+          this._fetchTasks();
+        }
+      },
+
+      _displayUser: function(user) {
+        if (user) {
+          var result = '';
+          if (user.properties['firstName']) {
+            result += user.properties['firstName'];
+          }
+          if (user.properties['lastName']) {
+            if (result.length > 0) {
+              result += ' ';
+            }
+            result += user.properties['lastName'];
+          }
+          if (result.length === 0) {
+            result = user.id;
+          }
+          return result;
+        }
+      },
+
+      _toast: function(text) {
+        this._notify({detail: {message: text}});
+      },
+
+      _documentAddedToCollection: function(e) {
+        this._toast(
+          this.i18n(e.detail.docIds ? 'app.documents.addedToCollection' : 'app.document.addedToCollection')
+        );
+      },
+
+      _documentRemovedFromCollection: function() {
+        this._toast(this.i18n('app.document.removedFromCollection'));
+      },
+
+      _documentRemovedFromClipboard: function() {
+        this._toast(this.i18n('app.document.removedFromClipboard'));
+      },
+
+      _documentAddedToFavorites: function() {
+        this._toast(this.i18n('app.document.addedToFavorites'));
+      },
+
+      _documentRemovedFromFavorites: function() {
+        this._toast(this.i18n('app.document.removedFromFavorites'));
+      },
+
+      _documentSubscribed: function() {
+        this._toast(this.i18n('app.document.subscribed'));
+      },
+
+      _documentUnsubscribed: function() {
+        this._toast(this.i18n('app.document.unsubscribed'));
+      },
+
+      _documentLocked: function() {
+        this._toast(this.i18n('app.document.locked'));
+      },
+
+      _documentUnlocked: function() {
+        this._toast(this.i18n('app.document.unlocked'));
+      },
+
+      _documentsDeletedError: function(err, documents){
+        var errorMessage = this.i18n(documents && documents.length > 1
+          ? 'app.documents.deleted.error' : 'app.document.deleted.error');
+
+        switch (err.status){
+          case 403: errorMessage = errorMessage + " " +  this.i18n('error.403'); break;
+          default: break;
+        }
+        this._toast(errorMessage);
+      },
+
+      _documentFileDeleted: function() {
+        this._toast(this.i18n('app.document.fileDeleted'));
+        this.fire('document-updated');
+      },
+
+      _themeChanged: function() {
+        this._toast(this.i18n('themes.applying'));
+        location.reload();
+      },
+
+      _handleDocumentCreated: function(e) {
+        if (!e.detail.response.entries || e.detail.response.entries.length === 1) {
+          var doc = e.detail.response.entries ? e.detail.response.entries[0] : e.detail.response;
+          this._toast(this.i18n('app.createdDocument', doc.type.toLowerCase() + ' ' + doc.title));
+        } else {
+          this._toast(this.i18n('app.createdDocuments', e.detail.response.entries.length));
+        }
+      },
+
+      _hasAdministrationPermissions: function(user) {
+        return user.isAdministrator || this.isMember(user, 'powerusers');
+      },
+
+      _errorUrl: function() {
+        return window.location.href;
+      },
+
+      _onError: function(e) {
+        this.showError(e.detail.code, e.detail.message, this._errorUrl());
+      },
+
+      _logout: function() {
+        return this.$.nxcon.url + '/logout';
+      },
+
+      _pageChanged: function(page) {
+        if (page !== null) {
+          var el = this.$.pages.selectedItem;
+          // selectItem might be undefined
+          // https://github.com/PolymerElements/iron-pages/issues/52
+          if (!el) {
+            el = Polymer.dom(this.$.pages).querySelector('[name=' + page + ']');
+          }
+          if (!el) {
+            this.showError(404, '', page);
+            return;
+          }
+          // check if page is already registered (vulcanized)
+          if (!Polymer.isInstance(el)) {
+            this.loading = true;
+            var tag = el.tagName.toLowerCase();
+            this.importHref(this.resolveUrl(tag + '.html'), this._pageLoaded, function() {
+              this.showError(404, '', tag + '.html');
+            }.bind(this), true);
+          }
+        }
+      },
+
+      _pageLoaded: function() {
+        this.loading = false;
+      },
+
+      _notify: function(e) {
+        var options = e.detail;
+        if (options.close) {
+          this.$.toast.close();
+        } else if (options.message) {
+          this.$.toast.text = options.message;
+          this.$.toast.duration = options.duration ? options.duration : 3000;
+          this.set('_dismissible', !!options.dismissible);
+          this.$.toast.open();
+        }
+      },
+
+      _dismissToast: function() {
+        this.$.toast.toggle();
+      },
+
+      _clipboardUpdated: function(e) {
+        this.clipboard = this.clipboard || this.$$('#clipboard');
+        this.set('clipboardDocCount', e.detail.docCount);
+      }
+
+    });
+  </script>
+
+</dom-module>

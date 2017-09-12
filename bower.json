@@ -2,6 +2,7 @@
   "name": "nuxeo-web-ui",
   "private": true,
   "dependencies": {
+    "app-layout": "PolymerElements/app-layout#^0.10.0",
     "alloyeditor": "0.7.5",
     "iron-elements": "PolymerElements/iron-elements#^1.0.0",
     "jsPlumb": "2.0.4",
