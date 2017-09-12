@@ -38,7 +38,7 @@ Build and optimize the current project, ready for deployment. This includes lint
 #### Modified
 * Modification du gulpfile.js : copie du contenu de nuxeo-web-ui dans .nuxeo-web-ui.
 
-* Pour ajouter des composants bower : ajout d'un keendoo-app/elements, ajouter une tache de vulcanisation, ajouter une ressource comme ci-dessous (cette contrib permet d'ajouter des ressources via login.jsp)
+* Pour ajouter des composants bower : ajout d'un keendoo-app/elements, ajouter une tache de vulcanisation, ajouter une ressource comme ci-dessous (cette contrib permet d'ajouter des ressources via login.jsp) - https://doc.nuxeo.com/nxdoc/web-ui-customization-tutorial/
 ````
 <?xml version="1.0"?>
 
