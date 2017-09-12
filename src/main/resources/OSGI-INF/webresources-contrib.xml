@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component name="org.keendoo.web.ui.resources">
+
+  <extension target="org.nuxeo.ecm.platform.WebResources" point="resources">
+
+    <resource name="elements.html" type="import">
+      <uri>/ui/keendoo-app/elements.html</uri>
+    </resource>
+
+  </extension>
+
+  <extension target="org.nuxeo.ecm.platform.WebResources" point="bundles">
+
+    <!-- main bundle with all import resources -->
+    <bundle name="web-ui">
+      <resources>
+        <resource>elements.html</resource>
+      </resources>
+    </bundle>
+
+  </extension>
+
+</component>

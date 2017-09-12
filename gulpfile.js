@@ -243,7 +243,7 @@ gulp.task('merge-message-files-prod', function() {
 
 // Vulcanize granular configuration
 gulp.task('vulcanize', function() {
-  return gulp.src(dist('elements/elements.html'))
+  return gulp.src(dist('elements/keendoo-app/elements.html'))
       .pipe($.vulcanize({
         stripComments: true,
         inlineCss: true,
