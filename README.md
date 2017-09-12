@@ -36,9 +36,9 @@ gulp
 Build and optimize the current project, ready for deployment. This includes linting as well as vulcanization, image, script, stylesheet and HTML optimization and minification.
 
 #### Modified
-Modification du gulpfile.js : copie du contenu de nuxeo-web-ui dans .nuxeo-web-ui.
+* Modification du gulpfile.js : copie du contenu de nuxeo-web-ui dans .nuxeo-web-ui.
 
-Pour ajouter des composants bower : ajout d'un keendoo-app/elements, ajouter une tache de vulcanisation, ajouter une ressource comme ci-dessous (cette contrib permet d'ajouter des ressources via login.jsp)
+* Pour ajouter des composants bower : ajout d'un keendoo-app/elements, ajouter une tache de vulcanisation, ajouter une ressource comme ci-dessous (cette contrib permet d'ajouter des ressources via login.jsp)
 ````
 <?xml version="1.0"?>
 
