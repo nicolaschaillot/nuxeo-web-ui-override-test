@@ -54,6 +54,12 @@ var app = function(subpath) {
   return !subpath ? APP : path.join(APP, subpath);
 };
 
+var NUXEO_WEBUI_APP = '../nuxeo-web-ui';
+
+var nuxeo_web_ui_app = function(subpath) {
+  return !subpath ? NUXEO_WEBUI_APP : path.join(NUXEO_WEBUI_APP, subpath);
+};
+
 var styleTask = function(stylesPath, srcs) {
   return gulp.src(srcs.map(function(src) {
     return path.join(app(), stylesPath, src);
@@ -166,11 +172,43 @@ gulp.task('html', function() {
       dist());
 });
 
-// merge message files from nuxeo-ui-elements and nuxeo-web-ui
-// in case of conflict, nuxeo-web-ui prevails
+gulp.task('copy-nuxeo-web-ui', ['clean-nuxeo-webui'], function() {
+  
+  return gulp.src([
+    nuxeo_web_ui_app('*.{html,ico}'),
+    nuxeo_web_ui_app('manifest.json'),
+    nuxeo_web_ui_app('elements/**/*'),
+    nuxeo_web_ui_app('i18n/**/*'),
+    nuxeo_web_ui_app('styles/**/*'),
+    nuxeo_web_ui_app('themes/**/*'),
+  ], {
+    base: nuxeo_web_ui_app()
+  }).pipe(gulp.dest('.nuxeo-web-ui'));
+
+});
+
+gulp.task('merge-local-in-nuxeo-web-ui',['copy-nuxeo-web-ui'], function() {
+
+  return gulp.src([
+    app('*.{html,ico}'),
+    app('manifest.json'),
+    app('elements/**/*'),
+    app('i18n/**/*'),
+    app('styles/**/*'),
+    app('themes/**/*')
+  ], {
+    base: app()
+  }).pipe(gulp.dest('.nuxeo-web-ui'));
+
+  //return merge(nuxeo_web_ui, application);
+});
+
+// merge message files from nuxeo-ui-elements, nuxeo-web-ui and keendoo-web-ui
+// in case of conflict, keendoo-web-ui prevails
 gulp.task('merge-message-files', function() {
   var i18ndist = dist('i18n');
   var i18ntmp = '.tmp/i18n';
+  var i18nwebui = '.nuxeo-web-ui/i18n';
   return gulp.src(['bower_components/nuxeo-ui-elements/i18n/messages*.json'])
              .pipe($.if(function(file) {
                return fs.existsSync(path.join('i18n', path.basename(file.path)));
@@ -178,10 +216,12 @@ gulp.task('merge-message-files', function() {
                gulp.src([file.path, path.join('i18n', path.basename(file.path))])
                    .pipe(mergeJson(path.basename(file.path)))
                    .pipe(gulp.dest(i18ntmp))
+                   .pipe(gulp.dest(i18nwebui))
                    .pipe(gulp.dest(i18ndist));
                callback();
              })))
              .pipe(gulp.dest(i18ntmp))
+             .pipe(gulp.dest(i18nwebui))
              .pipe(gulp.dest(i18ndist))
              .pipe($.size({title: 'merge-message-files'}));
 });
@@ -250,6 +290,12 @@ gulp.task('strip', function() {
   ]);
 });
 
+
+// Clean .nuxeo-web-ui directory
+gulp.task('clean-nuxeo-webui', function() {
+  return del(['.nuxeo-web-ui']);
+});
+
 // Clean output directory
 gulp.task('clean', function() {
   return del(['.tmp']);
@@ -279,7 +325,14 @@ gulp.task('default', ['clean'], function(cb) {
 });
 
 // Watch files for changes & reload
-gulp.task('serve', ['lint', 'styles', 'elements', 'images', 'merge-message-files'], function() {
+gulp.task('serve', [
+  'lint', 
+  'styles', 
+  'elements', 
+  'images', 
+  'merge-message-files',
+  'merge-local-in-nuxeo-web-ui'
+], function() {
   // setup our local proxy
   var proxyOptions = require('url').parse('http://localhost:8080/nuxeo');
   proxyOptions.route = '/nuxeo';
@@ -300,7 +353,7 @@ gulp.task('serve', ['lint', 'styles', 'elements', 'images', 'merge-message-files
     //       will present a certificate warning in the browser.
     // https: true,
     server: {
-      baseDir: ['.tmp', '.'],
+      baseDir: ['.tmp', '.', '.nuxeo-web-ui'],
       middleware: [require('proxy-middleware')(proxyOptions)]
     }
   });

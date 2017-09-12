@@ -4,6 +4,7 @@ dist
 .swp
 .tmp
 .publish
+.nuxeo-web-ui
 
 syntax:glob
 .classpath
