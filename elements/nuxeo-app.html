@@ -224,6 +224,12 @@ limitations under the License.
         background-color: var(--nuxeo-drawer-background);
       }
 
+      nuxeo-suggester ::content #searchButton.nuxeo-suggester {
+        left: 0;
+        width: 43px;
+        height:  var(--nuxeo-app-header-height);
+      }
+
       .blueHeader {
         background-color: #fff;
         box-shadow: 0 2px 4px 0 rgba(0,0,0,0.50);
@@ -258,104 +264,107 @@ limitations under the License.
     <nuxeo-resource id="tasks" path="/task" headers='{"X-NXfetch.task": "targetDocumentIds,actors"}'></nuxeo-resource>
     <nuxeo-resource id="task" path="/task/[[currentTaskId]]" headers='{"X-NXfetch.task": "targetDocumentIds,actors"}'></nuxeo-resource>
 
+    <!-- search  -->
+    <nuxeo-suggester id="suggester"></nuxeo-suggester>
+
     <app-header-layout>
-            <!-- header -->
-            <app-header class="blueHeader" condenses fixed effects="waterfall" slot="header">
-              <app-toolbar>
-                  <div main-title></div>
-                  <!-- logo -->
-                  <a id="logo" href$="[[urlFor('home')]]">
-                    <img src$="[[_logo(baseUrl)]]" alt="[[i18n('accessibility.logo')]]"/>
-                  </a>
-                  <!-- User infos -->
-                  <keendoo-user-navigation id="user-nav" user="[[currentUser]]"></keendoo-user-navigation>
-                  <!-- Sign out button -->
-                  <keendoo-button-logout id="buttonLogout"></keendoo-button-logout>
-              </app-toolbar>
-            </app-header>
+      <!-- header -->
+      <app-header class="blueHeader" condenses fixed effects="waterfall" slot="header">
+        <app-toolbar>
+            <div main-title></div>
+            <!-- logo -->
+            <a id="logo" href$="[[urlFor('home')]]">
+              <img src$="[[_logo(baseUrl)]]" alt="[[i18n('accessibility.logo')]]"/>
+            </a>
+            <!-- User infos -->
+            <keendoo-user-navigation id="user-nav" user="[[currentUser]]"></keendoo-user-navigation>
+            <!-- Sign out button -->
+            <keendoo-button-logout id="buttonLogout"></keendoo-button-logout>
+        </app-toolbar>
+      </app-header>
                 
-            <app-drawer-layout>
-    <!-- app layout -->
-    <paper-drawer-panel id="drawerPanel" drawer-width="[[drawerWidth]]" responsive-width="720px" edge-swipe-sensitivity="0">
-      <div drawer>
+    <app-drawer-layout>
+      <!-- app layout -->
+      <paper-drawer-panel id="drawerPanel" drawer-width="[[drawerWidth]]" responsive-width="720px" edge-swipe-sensitivity="0">
+        <div drawer>
 
-        <!-- logo -->
-        <a id="logo" href$="[[urlFor('home')]]">
-          <img src$="[[_logo(baseUrl)]]" alt="[[i18n('accessibility.logo')]]"/>
-        </a>
+          <!-- logo -->
+          <a id="logo" href$="[[urlFor('home')]]">
+            <img src$="[[_logo(baseUrl)]]" alt="[[i18n('accessibility.logo')]]"/>
+          </a>
 
-        <!-- menu -->
-        <paper-menu id="menu" selected="{{selectedTab}}" attr-for-selected="name" selected-class="selected" on-iron-activate="_toggleDrawer">
-          <nuxeo-slot slot="DRAWER_ITEMS" model="[[actionContext]]"></nuxeo-slot>
-          <nuxeo-menu-icon name="administration" icon="nuxeo:admin" label="app.administration" class="admin-icon"
-                           hidden$="[[!_hasAdministrationPermissions(currentUser)]]">
-          </nuxeo-menu-icon>
-          <nuxeo-menu-icon name="profile" icon="nuxeo:user-settings" label="app.account" class="profile-icon"></nuxeo-menu-icon>
-        </paper-menu>
+          <!-- menu -->
+          <paper-menu id="menu" selected="{{selectedTab}}" attr-for-selected="name" selected-class="selected" on-iron-activate="_toggleDrawer">
+            <nuxeo-slot slot="DRAWER_ITEMS" model="[[actionContext]]"></nuxeo-slot>
+            <nuxeo-menu-icon name="administration" icon="nuxeo:admin" label="app.administration" class="admin-icon"
+                            hidden$="[[!_hasAdministrationPermissions(currentUser)]]">
+            </nuxeo-menu-icon>
+            <nuxeo-menu-icon name="profile" icon="nuxeo:user-settings" label="app.account" class="profile-icon"></nuxeo-menu-icon>
+          </paper-menu>
 
-        <!-- drawer -->
-        <div id="drawer">
-          <iron-pages id="drawer-pages" selected="[[selectedTab]]" attr-for-selected="name" selected-attribute="visible">
+          <!-- drawer -->
+          <div id="drawer">
+            <iron-pages id="drawer-pages" selected="[[selectedTab]]" attr-for-selected="name" selected-attribute="visible">
 
-            <nuxeo-slot slot="DRAWER_PAGES" model="[[actionContext]]"></nuxeo-slot>
+              <nuxeo-slot slot="DRAWER_PAGES" model="[[actionContext]]"></nuxeo-slot>
 
-            <template is="dom-if" if="[[_hasAdministrationPermissions(currentUser)]]">
-              <div name="administration">
-                <div class="header">[[i18n('app.administration')]]</div>
-                <iron-selector selected="{{selectedAdminTab}}" attr-for-selected="name">
-                  <nuxeo-slot slot="ADMINISTRATION_MENU" model="[[actionContext]]"></nuxeo-slot>
+              <template is="dom-if" if="[[_hasAdministrationPermissions(currentUser)]]">
+                <div name="administration">
+                  <div class="header">[[i18n('app.administration')]]</div>
+                  <iron-selector selected="{{selectedAdminTab}}" attr-for-selected="name">
+                    <nuxeo-slot slot="ADMINISTRATION_MENU" model="[[actionContext]]"></nuxeo-slot>
+                  </iron-selector>
+                </div>
+              </template>
+
+              <div name="profile" class="layout vertical">
+                <div class="header">[[_displayUser(currentUser)]]</div>
+                <iron-selector selected="{{selectedProfileTab}}" attr-for-selected="name">
+                  <nuxeo-slot slot="USER_MENU" model="[[actionContext]]"></nuxeo-slot>
+                  <nuxeo-menu-item name="logout" label="app.user.signOut" link="[[_logout()]]"></nuxeo-menu-item>
                 </iron-selector>
               </div>
-            </template>
 
-            <div name="profile" class="layout vertical">
-              <div class="header">[[_displayUser(currentUser)]]</div>
-              <iron-selector selected="{{selectedProfileTab}}" attr-for-selected="name">
-                <nuxeo-slot slot="USER_MENU" model="[[actionContext]]"></nuxeo-slot>
-                <nuxeo-menu-item name="logout" label="app.user.signOut" link="[[_logout()]]"></nuxeo-menu-item>
-              </iron-selector>
-            </div>
+            </iron-pages>
+          </div>
+        </div>
+
+        <!-- pages -->
+        <paper-header-panel main mode="seamed">
+          <iron-pages id="pages" selected="[[page]]" attr-for-selected="name" selected-attribute="visible">
+
+            <nuxeo-slot slot="PAGES" model="[[actionContext]]"></nuxeo-slot>
+
+            <nuxeo-home name="home" tasks="[[tasks]]"></nuxeo-home>
+
+            <nuxeo-browser name="browse" id="browser" document="[[currentDocument]]" selected-tab="{{docAction}}" clipboard="[[clipboard]]"></nuxeo-browser>
+
+            <nuxeo-search-results name="search" id="searchResults" search-form="[[searchForm]]"></nuxeo-search-results>
+
+            <nuxeo-tasks id="tasks-dashboard" name="tasks" tasks="[[tasks]]" current="[[currentTask]]"></nuxeo-tasks>
+
+            <nuxeo-admin name="admin" user="[[currentUser]]" selected="[[selectedAdminTab]]" entity="[[entity]]" on-error="_onError"></nuxeo-admin>
+
+            <nuxeo-profile name="profile" selected="[[selectedProfileTab]]" user="[[currentUser]]"></nuxeo-profile>
+
+            <nuxeo-themes name="themes" selected="[[selectedProfileTab]]"></nuxeo-themes>
+
+            <nuxeo-page name="error">
+              <div class="header"></div>
+              <div class="content">
+                <paper-card>
+                  <nuxeo-error id="error">
+                  </nuxeo-error>
+                </paper-card>
+              </div>
+            </nuxeo-page>
 
           </iron-pages>
-        </div>
-      </div>
 
-      <!-- pages -->
-      <paper-header-panel main mode="seamed">
-        <iron-pages id="pages" selected="[[page]]" attr-for-selected="name" selected-attribute="visible">
+          <paper-icon-button id="drawerToggle" icon="menu" on-tap="_openDrawer" paper-drawer-toggle></paper-icon-button>
+          <!--<nuxeo-suggester id="suggester"></nuxeo-suggester>-->
 
-          <nuxeo-slot slot="PAGES" model="[[actionContext]]"></nuxeo-slot>
-
-          <nuxeo-home name="home" tasks="[[tasks]]"></nuxeo-home>
-
-          <nuxeo-browser name="browse" id="browser" document="[[currentDocument]]" selected-tab="{{docAction}}" clipboard="[[clipboard]]"></nuxeo-browser>
-
-          <nuxeo-search-results name="search" id="searchResults" search-form="[[searchForm]]"></nuxeo-search-results>
-
-          <nuxeo-tasks id="tasks-dashboard" name="tasks" tasks="[[tasks]]" current="[[currentTask]]"></nuxeo-tasks>
-
-          <nuxeo-admin name="admin" user="[[currentUser]]" selected="[[selectedAdminTab]]" entity="[[entity]]" on-error="_onError"></nuxeo-admin>
-
-          <nuxeo-profile name="profile" selected="[[selectedProfileTab]]" user="[[currentUser]]"></nuxeo-profile>
-
-          <nuxeo-themes name="themes" selected="[[selectedProfileTab]]"></nuxeo-themes>
-
-          <nuxeo-page name="error">
-            <div class="header"></div>
-            <div class="content">
-              <paper-card>
-                <nuxeo-error id="error">
-                </nuxeo-error>
-              </paper-card>
-            </div>
-          </nuxeo-page>
-
-        </iron-pages>
-
-        <paper-icon-button id="drawerToggle" icon="menu" on-tap="_openDrawer" paper-drawer-toggle></paper-icon-button>
-        <nuxeo-suggester id="suggester"></nuxeo-suggester>
-
-      </paper-header-panel>
+        </paper-header-panel>
     </paper-drawer-panel>
 
 </app-drawer-layout>
