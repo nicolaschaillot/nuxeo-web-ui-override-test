@@ -203,12 +203,11 @@ gulp.task('merge-local-in-nuxeo-web-ui',['copy-nuxeo-web-ui'], function() {
   //return merge(nuxeo_web_ui, application);
 });
 
-// merge message files from nuxeo-ui-elements, nuxeo-web-ui and keendoo-web-ui
+// merge message files from nuxeo-ui-elements, keendoo-web-ui
 // in case of conflict, keendoo-web-ui prevails
-gulp.task('merge-message-files',  function() {
+gulp.task('merge-message-files', ['merge-local-in-nuxeo-web-ui'], function() {
   var i18ndist = dist('i18n');
   var i18ntmp = '.tmp/i18n';
-  var i18nwebui = '.nuxeo-web-ui/i18n';
   return gulp.src(['bower_components/nuxeo-ui-elements/i18n/messages*.json'])
              .pipe($.if(function(file) {
                return fs.existsSync(path.join('i18n', path.basename(file.path)));
@@ -216,14 +215,24 @@ gulp.task('merge-message-files',  function() {
                gulp.src([file.path, path.join('i18n', path.basename(file.path))])
                    .pipe(mergeJson(path.basename(file.path)))
                    .pipe(gulp.dest(i18ntmp))
-                   .pipe(gulp.dest(i18nwebui))
                    .pipe(gulp.dest(i18ndist));
                callback();
              })))
              .pipe(gulp.dest(i18ntmp))
-             .pipe(gulp.dest(i18nwebui))
              .pipe(gulp.dest(i18ndist))
              .pipe($.size({title: 'merge-message-files'}));
+});
+
+// merge message files from nuxeo-ui-elements, keendoo-web-ui 
+// in case of conflict, keendoo-web-ui prevails
+gulp.task('merge-message-files-nuxeo-web-ui', ['merge-message-files'],  function() {
+  var i18ndist = dist('i18n');
+  var i18ntmp = '.tmp/i18n';
+  //var i18nwebui = '.nuxeo-web-ui/i18n';
+  return gulp.src(['.nuxeo-web-ui/i18n/messages*.json'])
+             .pipe(gulp.dest(i18ntmp))
+             .pipe(gulp.dest(i18ndist))
+             .pipe($.size({title: 'merge-message-files-nuxeo-web-ui'}));
 });
 
 gulp.task('merge-message-files-prod', function() {
@@ -331,7 +340,8 @@ gulp.task('serve', [
   'elements', 
   'images', 
   'merge-message-files',
-  'merge-local-in-nuxeo-web-ui'
+  'merge-local-in-nuxeo-web-ui',
+  'merge-message-files-nuxeo-web-ui'
 ], function() {
   // setup our local proxy
   var proxyOptions = require('url').parse('http://localhost:8080/nuxeo');

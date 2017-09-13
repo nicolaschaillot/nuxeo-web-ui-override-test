@@ -2,10 +2,12 @@
 
 <component name="org.keendoo.web.ui.resources">
 
+  <require>org.nuxeo.web.ui.resources</require>
+
   <extension target="org.nuxeo.ecm.platform.WebResources" point="resources">
 
-    <resource name="elements.html" type="import">
-      <uri>/ui/keendoo-app/elements.html</uri>
+    <resource name="keendoo-elements.html" type="import">
+      <uri>/ui/keendoo-app/keendoo-elements.html</uri>
     </resource>
 
   </extension>
@@ -15,7 +17,7 @@
     <!-- main bundle with all import resources -->
     <bundle name="web-ui">
       <resources>
-        <resource>elements.html</resource>
+        <resource>keendoo-elements.html</resource>
       </resources>
     </bundle>
 
