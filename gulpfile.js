@@ -150,19 +150,7 @@ gulp.task('copy', function() {
     base: app()
   }).pipe(gulp.dest(dist()));
 
-  // copy user-group-management layouts
-  var userGroupManagement = gulp.src([
-    dist('bower_components/nuxeo-ui-elements/nuxeo-user-group-management/nuxeo-view-user.html'),
-    dist('bower_components/nuxeo-ui-elements/nuxeo-user-group-management/nuxeo-edit-user.html')])
-      .pipe(gulp.dest(dist('nuxeo-user-group-management')));
-
-  // copy select2 resources
-  var select2 = gulp.src([dist('bower_components/select2/select2.png'),
-    dist('bower_components/select2/select2-spinner.gif'),
-    dist('bower_components/select2/select2x2.png')])
-      .pipe(gulp.dest(dist('vendor')));
-
-  return merge(application, userGroupManagement, select2);
+  return merge(application);
 });
 
 // Scan your HTML for assets & optimize them
@@ -252,13 +240,19 @@ gulp.task('merge-message-files-prod', function() {
 
 // Vulcanize granular configuration
 gulp.task('vulcanize', function() {
-  return gulp.src(dist('elements/keendoo-app/elements.html'))
+  return gulp.src(dist('elements/keendoo-app/keendoo-elements.html'))
       .pipe($.vulcanize({
         stripComments: true,
         inlineCss: true,
-        inlineScripts: true
+        inlineScripts: true,
+        stripExcludes: false,
+        excludes: ['bower_components/polymer/polymer-micro.html'],
+        excludes: ['bower_components/polymer/polymer-mini.html'],
+        excludes: ['bower_components/polymer/polymer.html'],
+        //excludes: {'imports': ['../bower_components/polymer/polymer.html']}
+        }
       }))
-      .pipe($.replace('..\/bower_components', 'bower_components'))
+      .pipe($.replace('..\/..\/bower_components', '..\/bower_components'))
       //.pipe($.minifyInline())
       .pipe(gulp.dest(dist()))
       .pipe($.size({title: 'vulcanize'}));

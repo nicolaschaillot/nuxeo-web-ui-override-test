@@ -7,7 +7,7 @@
   <extension target="org.nuxeo.ecm.platform.WebResources" point="resources">
 
     <resource name="keendoo-elements.html" type="import">
-      <uri>/ui/keendoo-app/keendoo-elements.html</uri>
+      <uri>ui/keendoo-elements.html</uri>
     </resource>
 
   </extension>
@@ -16,7 +16,7 @@
 
     <!-- main bundle with all import resources -->
     <bundle name="web-ui">
-      <resources>
+      <resources append="true">
         <resource>keendoo-elements.html</resource>
       </resources>
     </bundle>
